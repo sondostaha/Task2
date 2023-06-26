@@ -6,12 +6,12 @@ use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
 use Exception;
 use Illuminate\Http\Request;
-
+use illuminate\Database\Eloquent\SoftDeletes;
 class CategoryController extends Controller
 {
     public function index(Category $category)
     {
-        $category = $category->get();
+        $category = $category->with('posts')->get();
         return response()->json($category);
     }
     public function create(CategoryRequest $request)
@@ -21,12 +21,22 @@ class CategoryController extends Controller
                 'name' => $request->name,
             ]);
 
-            return response()->json(['message'=> 'category added successfully',200]);
+            return response()->json(['message'=> 'category added successfully','status' => 200]);
         }
         catch(Exception $ex)
        {
-        return response()->json(['message'=> 'sothing goes wrong please try again',500]);
+        return response()->json(['message'=> 'smothing goes wrong please try again','status' =>500]);
        }
+    }
+
+    public function show($id)
+    {
+        $category = Category::with('posts')->find($id);
+        if(! $category)
+        {
+            return response()->json(['message'=> 'this category not found ']);
+        }   
+        return response()->json(['category'=>$category]);
     }
 
     public function update(CategoryRequest $request ,$id)
@@ -35,7 +45,7 @@ class CategoryController extends Controller
             $category = Category::find($id);
             if(! $category)
             {
-            return response()->json(['message'=> 'this category not found ']);
+            return response()->json(['message'=> 'this category not found ','status' =>404]);
             }
             $category->update([
                 'name' => $request->name,
@@ -44,7 +54,7 @@ class CategoryController extends Controller
         }
         catch(Exception $ex)
         {
-            return response()->json(['message'=> 'sothing goes wrong please try again',500]);
+            return response()->json(['message'=> 'smothing goes wrong please try again','status' =>500]);
 
         }
     }
@@ -55,14 +65,39 @@ class CategoryController extends Controller
             $category = Category::find($id);
             if(! $category)
             {
-            return response()->json(['message'=> 'this category not found ']);
+            return response()->json(['message'=> 'this category not found ','status' =>404]);
             }
            $category->delete();
             return response()->json(['message'=> 'category delete successfully']);
         }
         catch(Exception $ex)
         {
-            return response()->json(['message'=> 'sothing goes wrong please try again',500]);
+            return response()->json(['message'=> 'smothing goes wrong please try again','status' =>500]);
+        }
+    }
+    public function restoreCategories()
+    {
+        try{
+             Category::onlyTrashed()->restore();;
+        
+            return response()->json(['message'=> 'all categories restored successfully']);
+        }
+        catch(Exception $ex)
+        {
+            return response()->json(['message'=> 'smothing goes wrong please try again','status' =>500]);
+        }
+    }
+
+    public function restoreCategory($id)
+    {
+        try{
+             Category::onlyTrashed()->where('id',$id)->restore();;
+        
+            return response()->json(['message'=> 'category restored successfully' ]);
+        }
+        catch(Exception $ex)
+        {
+            return response()->json(['message'=> 'smothing goes wrong please try again','status' =>500]);
         }
     }
 }
