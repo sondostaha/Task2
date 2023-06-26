@@ -6,6 +6,8 @@ use Exception;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Http\Requests\PostRequest;
+use App\Models\Category;
+use App\Models\CategoryPost;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Validator;
 
@@ -13,17 +15,29 @@ class PostController extends Controller
 {
     public function index(Post $Post)
     {
-        $Post = $Post->with('category')->get();
+        $Post = $Post->with('categories')->get();
         return response()->json($Post);
     }
     public function create(PostRequest $request)
     {
         try{
+
             $Post = Post::create([
                 'title' => $request->title,
                 'content' => $request->content,
-                // 'category_id' => $request->category_id
             ]);
+
+          
+            //    foreach($request->category_id as $category_id)
+            //    { 
+            //         CategoryPost::create([
+            //             'category_id' => $category_id,
+            //             'post_id' => $Post->id
+            //         ]);
+            //     }
+
+            $Post->categories()->attach(request('category_id'));
+            
 
             return response()->json(['message'=> 'Post added successfully','status' => 200]);
         }
@@ -35,7 +49,7 @@ class PostController extends Controller
   
     public function show($id)
     {
-        $post = Post::with('category')->find($id);
+        $post = Post::with('categories')->find($id);
         if(! $post)
         {
             return response()->json(['message'=> 'this post not found ','status' =>404]);
@@ -54,7 +68,6 @@ class PostController extends Controller
             $Post->update([
                 'title' => $request->title,
                 'content' => $request->content,
-                // 'category_id' => $request->category_id
             ]);
             return response()->json(['message'=> 'Post updated successfully','Post' => $Post]);
         }
@@ -73,7 +86,12 @@ class PostController extends Controller
             {
             return response()->json(['message'=> 'this Post not found ']);
             }
-           $Post->delete();
+            $categoryPost = CategoryPost::where('post_id',$Post->id)->get();
+            foreach($categoryPost as $category_post)
+            {
+            $category_post->delete();
+            }
+            $Post->delete();
             return response()->json(['message'=> 'Post delete successfully']);
         }
         catch(Exception $ex)
@@ -86,7 +104,7 @@ class PostController extends Controller
     {
         try{
              Post::onlyTrashed()->restore();;
-        
+
             return response()->json(['message'=> 'all Posts restored successfully']);
         }
         catch(Exception $ex)

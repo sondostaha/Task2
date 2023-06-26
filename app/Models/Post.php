@@ -15,10 +15,10 @@ class Post extends Model
         'content',
         'category_id'
     ];
-    protected $guarded = [] ;
 
-    public function category()
+
+    public function categories()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsToMany(Category::class , CategoryPost::class ,'post_id','category_id');
     }
 }
