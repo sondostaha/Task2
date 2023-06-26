@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +51,8 @@ Route::middleware('auth:api')->group( function(){
         Route::post('delete/{id}',[PostController::class,'delete']);
         Route::post('retrieve',[PostController::class,'restorePosts']);
         Route::post('retrieve/post/{id}',[PostController::class,'restorePost']);
+        //search
+        Route::get('search/{type}',[SearchController::class ,'search']);
 
     });
 
